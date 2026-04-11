@@ -14,6 +14,12 @@ interface InputSectionProps {
 const InputSection: React.FC<InputSectionProps> = ({ onStart, isProcessing, settings, onSettingsChange, onAlert }) => {
   const [inputText, setInputText] = useState('');
   const [csvFile, setCsvFile] = useState<{ name: string; items: InputItem[] } | null>(null);
+  const [pendingCsv, setPendingCsv] = useState<{
+    filename: string;
+    rows: Record<string, string>[];
+    headers: string[];
+    selectedUrlCol: string;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleStart = () => {
@@ -41,7 +47,30 @@ const InputSection: React.FC<InputSectionProps> = ({ onStart, isProcessing, sett
   const handleClear = () => {
     setInputText('');
     setCsvFile(null);
+    setPendingCsv(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleConfirmCsv = () => {
+    if (!pendingCsv) return;
+    const { filename, rows, selectedUrlCol } = pendingCsv;
+    const items: InputItem[] = rows
+      .filter(row => row[selectedUrlCol] && row[selectedUrlCol].length > 3)
+      .map(row => {
+        let url = row[selectedUrlCol].trim();
+        if (!url.startsWith('http')) url = `https://${url}`;
+        return {
+          url,
+          originalRow: row
+        };
+      });
+    
+    setCsvFile({
+      name: filename,
+      items
+    });
+    setInputText('');
+    setPendingCsv(null);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,28 +85,16 @@ const InputSection: React.FC<InputSectionProps> = ({ onStart, isProcessing, sett
         try {
           const rows = parseCSV(content);
           if (rows.length > 0) {
-            // Find URL column based on first row
-            const urlCol = findUrlColumn(rows[0]);
+            const headers = Object.keys(rows[0]);
+            const urlCol = findUrlColumn(rows[0]) || headers[0];
             
-            if (urlCol) {
-              const items: InputItem[] = rows
-                .filter(row => row[urlCol] && row[urlCol].length > 3) // Filter empty urls
-                .map(row => {
-                  let url = row[urlCol].trim();
-                  if (!url.startsWith('http')) url = `https://${url}`;
-                  return {
-                    url,
-                    originalRow: row
-                  };
-                });
-              
-              setCsvFile({
-                name: file.name,
-                items
-              });
-              setInputText(''); // Clear text area to avoid confusion
-              return;
-            }
+            setPendingCsv({
+              filename: file.name,
+              rows,
+              headers,
+              selectedUrlCol: urlCol
+            });
+            return;
           }
         } catch (err) {
           console.error("CSV Parse error", err);
@@ -121,7 +138,43 @@ const InputSection: React.FC<InputSectionProps> = ({ onStart, isProcessing, sett
         </div>
       </div>
 
-      {csvFile ? (
+      {pendingCsv ? (
+        <div className="w-full p-6 bg-indigo-50 border border-indigo-200 rounded-lg flex flex-col items-center justify-center text-indigo-900 gap-4 relative">
+            <FileSpreadsheet className="w-12 h-12 text-indigo-500" />
+            <div className="text-center w-full max-w-md">
+                <p className="font-semibold text-lg">{pendingCsv.filename}</p>
+                <p className="text-sm opacity-80 mt-1 mb-4">
+                  Načteno {pendingCsv.rows.length} řádků.
+                </p>
+                <div className="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm text-left">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Který sloupec obsahuje webové stránky?
+                    </label>
+                    <select 
+                        className="w-full p-2 border border-slate-300 rounded-md mb-4 focus:ring-2 focus:ring-indigo-500 outline-none"
+                        value={pendingCsv.selectedUrlCol}
+                        onChange={(e) => setPendingCsv({...pendingCsv, selectedUrlCol: e.target.value})}
+                    >
+                        {pendingCsv.headers.map(h => (
+                            <option key={h} value={h}>{h}</option>
+                        ))}
+                    </select>
+                    <button 
+                        onClick={handleConfirmCsv}
+                        className="w-full py-2 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition-colors"
+                    >
+                        Potvrdit výběr
+                    </button>
+                </div>
+            </div>
+            <button 
+              onClick={handleClear}
+              className="absolute top-4 right-4 p-1 hover:bg-indigo-100 rounded-full transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+        </div>
+      ) : csvFile ? (
         <div className="w-full h-48 p-4 bg-blue-50 border border-blue-200 rounded-lg flex flex-col items-center justify-center text-blue-800 gap-3 relative">
             <FileSpreadsheet className="w-12 h-12 text-blue-500" />
             <div className="text-center">

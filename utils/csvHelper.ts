@@ -1,6 +1,24 @@
 /**
- * Simple robust CSV parser handling quotes and commas
+ * Simple robust CSV parser handling quotes and commas/semicolons
  */
+
+const detectDelimiter = (line: string): string => {
+  let commas = 0;
+  let semicolons = 0;
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') inQuotes = !inQuotes;
+    else if (!inQuotes) {
+      if (char === ',') commas++;
+      else if (char === ';') semicolons++;
+    }
+  }
+  
+  return semicolons > commas ? ';' : ',';
+};
+
 export const parseCSV = (text: string): Record<string, string>[] => {
   const lines: string[] = [];
   let currentLine = '';
@@ -24,13 +42,15 @@ export const parseCSV = (text: string): Record<string, string>[] => {
 
   if (lines.length < 2) return [];
 
+  const delimiter = detectDelimiter(lines[0]);
+
   // Parse Headers
-  const headers = parseLine(lines[0]).map(h => h.trim());
+  const headers = parseLine(lines[0], delimiter).map(h => h.trim());
 
   // Parse Rows
   const result: Record<string, string>[] = [];
   for (let i = 1; i < lines.length; i++) {
-    const values = parseLine(lines[i]);
+    const values = parseLine(lines[i], delimiter);
     const row: Record<string, string> = {};
     
     // Map values to headers
@@ -43,7 +63,7 @@ export const parseCSV = (text: string): Record<string, string>[] => {
   return result;
 };
 
-const parseLine = (line: string): string[] => {
+const parseLine = (line: string, delimiter: string = ','): string[] => {
   const result: string[] = [];
   let currentVal = '';
   let inQuotes = false;
@@ -59,7 +79,7 @@ const parseLine = (line: string): string[] => {
       } else {
         inQuotes = !inQuotes;
       }
-    } else if (char === ',' && !inQuotes) {
+    } else if (char === delimiter && !inQuotes) {
       result.push(currentVal.trim());
       currentVal = '';
     } else {
