@@ -8,9 +8,10 @@ interface InputSectionProps {
   isProcessing: boolean;
   settings: AppSettings;
   onSettingsChange: (settings: AppSettings) => void;
+  onAlert?: (msg: string) => void;
 }
 
-const InputSection: React.FC<InputSectionProps> = ({ onStart, isProcessing, settings, onSettingsChange }) => {
+const InputSection: React.FC<InputSectionProps> = ({ onStart, isProcessing, settings, onSettingsChange, onAlert }) => {
   const [inputText, setInputText] = useState('');
   const [csvFile, setCsvFile] = useState<{ name: string; items: InputItem[] } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,7 +81,7 @@ const InputSection: React.FC<InputSectionProps> = ({ onStart, isProcessing, sett
           }
         } catch (err) {
           console.error("CSV Parse error", err);
-          alert("Nepodařilo se zpracovat CSV soubor. Zkontrolujte formát.");
+          if (onAlert) onAlert("Nepodařilo se zpracovat CSV soubor. Zkontrolujte formát.");
         }
       }
 

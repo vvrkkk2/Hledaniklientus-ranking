@@ -36,6 +36,9 @@ const App: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isTestingSync, setIsTestingSync] = useState(false);
   
+  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean, message: string, onConfirm: () => void } | null>(null);
+  const [alertDialog, setAlertDialog] = useState<{ isOpen: boolean, message: string } | null>(null);
+  
   const processingRef = useRef<boolean>(false);
 
   // --- NETWORK GUARDIAN ---
@@ -103,9 +106,25 @@ const App: React.FC = () => {
 
   const handleReset = (skipConfirm: boolean = false) => {
     if (isProcessing) {
-        if (!window.confirm("Proces stále běží. Opravdu chcete skončit a zahodit výsledky?")) return;
+        setConfirmDialog({
+            isOpen: true,
+            message: "Proces stále běží. Opravdu chcete skončit a zahodit výsledky?",
+            onConfirm: () => {
+                setConfirmDialog(null);
+                performReset();
+            }
+        });
+        return;
     } else if (!skipConfirm && stats.total > 0) {
-        if (!window.confirm("Tímto smažete aktuální výsledky a začnete nové hledání. Pokračovat?")) return;
+        setConfirmDialog({
+            isOpen: true,
+            message: "Tímto smažete aktuální výsledky a začnete nové hledání. Pokračovat?",
+            onConfirm: () => {
+                setConfirmDialog(null);
+                performReset();
+            }
+        });
+        return;
     }
 
     performReset();
@@ -144,7 +163,7 @@ const App: React.FC = () => {
       };
 
       await syncRowToSheet(dummyResult, 'Test Segment', settings.googleSheetUrl);
-      alert("Odesláno! Zkontrolujte nyní vaši Google Tabulku.");
+      setAlertDialog({ isOpen: true, message: "Odesláno! Zkontrolujte nyní vaši Google Tabulku." });
       setIsTestingSync(false);
   };
 
@@ -190,7 +209,7 @@ const App: React.FC = () => {
 
   const handleRetryRow = async (id: string) => {
       // Stub for future functionality or single item retry logic
-      alert("Funkce Retry pro jednotlivé řádky bude dostupná v příští verzi pro optimalizovaný režim.");
+      setAlertDialog({ isOpen: true, message: "Funkce Retry pro jednotlivé řádky bude dostupná v příští verzi pro optimalizovaný režim." });
   };
 
   // --- CORE PROCESSING LOOP (ROBUST MODE) ---
@@ -432,7 +451,13 @@ const App: React.FC = () => {
         {/* STEP 1: UPLOAD */}
         {step === 'UPLOAD' && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
-                <InputSection onStart={handleStart} isProcessing={isProcessing} settings={settings} onSettingsChange={setSettings} />
+                <InputSection 
+                    onStart={handleStart} 
+                    isProcessing={isProcessing} 
+                    settings={settings} 
+                    onSettingsChange={setSettings} 
+                    onAlert={(msg) => setAlertDialog({ isOpen: true, message: msg })}
+                />
             </div>
         )}
 
@@ -523,11 +548,54 @@ const App: React.FC = () => {
                     segments={segments} 
                     onRetry={handleRetryRow}
                     lastUpdated={lastTableUpdate}
+                    onAlert={(msg) => setAlertDialog({ isOpen: true, message: msg })}
                 />
             </div>
         )}
 
       </main>
+
+      {/* Confirm Modal */}
+      {confirmDialog?.isOpen && (
+          <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+              <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Opravdu?</h3>
+                  <p className="text-slate-600 mb-6">{confirmDialog.message}</p>
+                  <div className="flex justify-end gap-3">
+                      <button 
+                          onClick={() => setConfirmDialog(null)} 
+                          className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors"
+                      >
+                          Zrušit
+                      </button>
+                      <button 
+                          onClick={confirmDialog.onConfirm} 
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors shadow-sm"
+                      >
+                          Potvrdit
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Alert Modal */}
+      {alertDialog?.isOpen && (
+          <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+              <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Oznámení</h3>
+                  <p className="text-slate-600 mb-6">{alertDialog.message}</p>
+                  <div className="flex justify-end">
+                      <button 
+                          onClick={() => setAlertDialog(null)} 
+                          className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                      >
+                          Rozumím
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };

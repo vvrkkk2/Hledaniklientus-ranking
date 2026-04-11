@@ -19,16 +19,28 @@ const getAiClient = () => {
 
 const cleanJson = (text: string): string => {
     if (!text) return "{}";
-    const firstBrace = text.indexOf('{');
-    const lastBrace = text.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-        return text.substring(firstBrace, lastBrace + 1);
-    }
     let clean = text.trim();
     if (clean.startsWith('```json')) clean = clean.substring(7);
     else if (clean.startsWith('```')) clean = clean.substring(3);
     if (clean.endsWith('```')) clean = clean.substring(0, clean.length - 3);
-    return clean.trim();
+    clean = clean.trim();
+    
+    // Try to find array or object boundaries if there's still garbage
+    const firstBracket = clean.indexOf('[');
+    const lastBracket = clean.lastIndexOf(']');
+    const firstBrace = clean.indexOf('{');
+    const lastBrace = clean.lastIndexOf('}');
+    
+    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket && 
+        (firstBrace === -1 || firstBracket < firstBrace)) {
+        return clean.substring(firstBracket, lastBracket + 1);
+    }
+    
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        return clean.substring(firstBrace, lastBrace + 1);
+    }
+    
+    return clean;
 };
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

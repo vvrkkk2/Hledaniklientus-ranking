@@ -9,11 +9,12 @@ interface SmartResultsTableProps {
   segments: Segment[];
   onRetry: (id: string) => void;
   lastUpdated: number; // Trigger for refetching
+  onAlert?: (msg: string) => void;
 }
 
 const ITEMS_PER_PAGE = 50;
 
-const SmartResultsTable: React.FC<SmartResultsTableProps> = ({ totalCount, completedCount, segments, onRetry, lastUpdated }) => {
+const SmartResultsTable: React.FC<SmartResultsTableProps> = ({ totalCount, completedCount, segments, onRetry, lastUpdated, onAlert }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [data, setData] = useState<ScanResult[]>([]);
@@ -53,7 +54,7 @@ const SmartResultsTable: React.FC<SmartResultsTableProps> = ({ totalCount, compl
         const allResults = await getAllResults();
         
         if (allResults.length === 0) {
-            alert("Žádná data k exportu.");
+            if (onAlert) onAlert("Žádná data k exportu.");
             setIsExporting(false);
             return;
         }
@@ -127,7 +128,7 @@ const SmartResultsTable: React.FC<SmartResultsTableProps> = ({ totalCount, compl
 
     } catch (e) {
         console.error("Export failed", e);
-        alert("Export se nezdařil. Zkuste to prosím znovu.");
+        if (onAlert) onAlert("Export se nezdařil. Zkuste to prosím znovu.");
     } finally {
         setIsExporting(false);
     }
