@@ -97,13 +97,14 @@ export const processContact = async (
   originalRow: Record<string, string> | undefined,
   segment: Segment,
   idealClientProfile?: string,
-  serviceDescription?: string
+  serviceDescription?: string,
+  searchEmails: boolean = true
 ): Promise<EnrichedData> => {
   
   const contextData = originalRow ? JSON.stringify(originalRow) : "";
 
   const combinedPrompt = `
-    ÚKOL: Najdi kontaktní údaje pro firmu PROCHÁZENÍM WEBU: ${url}
+    ÚKOL: ${searchEmails ? 'Najdi kontaktní údaje a analyzuj' : 'Analyzuj'} firmu PROCHÁZENÍM WEBU: ${url}
     
     Data z CSV pro kontext: ${contextData}
     Segment: ${segment.name}
@@ -112,12 +113,13 @@ export const processContact = async (
 
     INSTRUKCE PRO HLEDÁNÍ:
     1. Použij Google Search Grounding k prozkoumání webové stránky ${url}.
-    2. Hledej sekce "Kontakty", "O nás", "Tým", "Vedení společnosti".
-    3. Hledej JMENOVITÉ emaily (např. jmeno.prijmeni@firma.cz). Toto je priorita.
-    4. Pokud nenajdeš osobu, hledej obecný email (info@, kontakt@).
+    2. Získej informace o firmě, co dělá a jak funguje.
+    ${searchEmails ? `3. Hledej sekce "Kontakty", "O nás", "Tým", "Vedení společnosti".
+    4. Hledej JMENOVITÉ emaily (např. jmeno.prijmeni@firma.cz). Toto je priorita.
+    5. Pokud nenajdeš osobu, hledej obecný email (info@, kontakt@).` : `3. NEHLEDEJ konkrétní kontakty ani e-maily, soustřeď se pouze na analýzu firmy.`}
 
     INSTRUKCE PRO ZPRACOVÁNÍ DAT:
-    1. Pokud najdeš osobu, ROZDĚL jméno na:
+    ${searchEmails ? `1. Pokud najdeš osobu, ROZDĚL jméno na:
        - firstName (Křestní jméno)
        - lastName (Příjmení - bez titulů)
     2. VYTVOŘ OSLOVENÍ (salutation):
@@ -128,7 +130,8 @@ export const processContact = async (
     3. KLASIFIKACE (contactType):
        - "person": Máš jméno osoby a email (osobní nebo malá firma).
        - "generic": Máš jen obecný email (info@).
-       - "none": Nemáš email.
+       - "none": Nemáš email.` : `1. Pro pole email, personName, firstName, lastName, personRole, salutation vrať null.
+    2. contactType nastav na "none".`}
 
     4. ANALÝZA LEADU (pokud je zadán profil ideálního klienta a popis služby):
        - overview: Vytvoř stručný základní přehled o firmě/osobě (1-2 věty).
@@ -137,15 +140,15 @@ export const processContact = async (
 
     VÝSTUP JSON:
     {
-      "email": "nalezený email nebo null",
-      "personName": "Celé Jméno nebo null",
-      "firstName": "Křestní nebo null",
-      "lastName": "Příjmení nebo null",
-      "personRole": "Role (např. Jednatel) nebo null",
-      "salutation": "Vážený pane Nováku / Dobrý den",
+      "email": ${searchEmails ? '"nalezený email nebo null"' : 'null'},
+      "personName": ${searchEmails ? '"Celé Jméno nebo null"' : 'null'},
+      "firstName": ${searchEmails ? '"Křestní nebo null"' : 'null'},
+      "lastName": ${searchEmails ? '"Příjmení nebo null"' : 'null'},
+      "personRole": ${searchEmails ? '"Role (např. Jednatel) nebo null"' : 'null'},
+      "salutation": ${searchEmails ? '"Vážený pane Nováku / Dobrý den"' : 'null'},
       "companyContext": "Stručný popis činnosti firmy (max 1 věta)",
       "ico": "IČO nebo null",
-      "contactType": "person" | "generic" | "none",
+      "contactType": ${searchEmails ? '"person" | "generic" | "none"' : '"none"'},
       "language": "cs",
       "overview": "Základní přehled o firmě nebo null",
       "icebreaker": "Tip na icebreaker zprávu nebo null",

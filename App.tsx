@@ -24,7 +24,8 @@ const App: React.FC = () => {
   
   const [settings, setSettings] = useState<AppSettings>({ 
       autoSync: true, 
-      googleSheetUrl: DEFAULT_SHEET_URL 
+      googleSheetUrl: DEFAULT_SHEET_URL,
+      searchEmails: true
   });
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -69,7 +70,10 @@ const App: React.FC = () => {
         
         const loadedSettings: AppSettings = {
             autoSync: dbSettings.autoSync ?? true,
-            googleSheetUrl: dbSettings.googleSheetUrl || DEFAULT_SHEET_URL
+            googleSheetUrl: dbSettings.googleSheetUrl || DEFAULT_SHEET_URL,
+            idealClientProfile: dbSettings.idealClientProfile,
+            serviceDescription: dbSettings.serviceDescription,
+            searchEmails: dbSettings.searchEmails ?? true
         };
         setSettings(loadedSettings);
         
@@ -233,7 +237,7 @@ const App: React.FC = () => {
             const segment = contextSegments.find(s => s.id === segmentId) || contextSegments[0] || { id: 'def', name: 'Obecné', description: 'Obecný segment' };
 
             try {
-                const enriched = await processContact(item.url, item.originalRow, segment, settings.idealClientProfile, settings.serviceDescription);
+                const enriched = await processContact(item.url, item.originalRow, segment, settings.idealClientProfile, settings.serviceDescription, settings.searchEmails !== false);
 
                 let completedResult: ScanResult = { 
                     ...item,

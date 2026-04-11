@@ -65,4 +65,5 @@ export interface AppSettings {
   autoSync: boolean;
   idealClientProfile?: string;
   serviceDescription?: string;
+  searchEmails?: boolean;
 }

@@ -177,6 +177,20 @@ const InputSection: React.FC<InputSectionProps> = ({ onStart, isProcessing, sett
         </div>
       </div>
 
+      <div className="mt-4 flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+        <input 
+            type="checkbox" 
+            id="searchEmails"
+            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+            checked={settings.searchEmails !== false}
+            onChange={(e) => onSettingsChange({ ...settings, searchEmails: e.target.checked })}
+            disabled={isProcessing}
+        />
+        <label htmlFor="searchEmails" className="text-sm font-medium text-slate-700 cursor-pointer">
+            Hledat kontaktní údaje (e-maily, jména osob)
+        </label>
+      </div>
+
       <div className="mt-6 flex justify-end">
         <button
           onClick={handleStart}
