@@ -151,8 +151,8 @@ export const processContact = async (
 
     4. ANALÝZA LEADU (pokud je zadán profil ideálního klienta a popis služby):
        - overview: Vytvoř detailní přehled o firmě/osobě. Zahrň konkrétní informace: co přesně dělají, kde sídlí (lokalita), jaké mají zkušenosti/historii a jejich hlavní zaměření. Vyhni se obecným frázím, buď co nejvíce konkrétní (3-4 věty).
-       - rating: Ohodnoť na škále 1-10, jak moc je to vhodný kandidát na oslovení (10 = perfektní shoda).
-       - icebreaker: Vytvoř vysoce personalizovaný tip na úvodní zprávu (icebreaker). Použij konkrétní detail z jejich webu nebo CSV (např. zmínka o jejich konkrétním produktu, lokalitě, nebo nedávném úspěchu) a přirozeně na to navaž naší službou. Musí to znít lidsky a autenticky, ne jako generický prodejní text. TENTO TIP VYTVOŘ POUZE POKUD JE RATING VĚTŠÍ NEŽ 6! Pokud je rating 6 nebo menší, vrať null.
+       - rating: Ohodnoť na škále 1-10, jak moc je to vhodný kandidát na oslovení. BUĎ VELMI PŘÍSNÝ A KRITICKÝ! 10 = naprosto dokonalá shoda s profilem ideálního klienta. Běžné firmy hodnoť níže (např. 3-6). Vyšší skóre dej jen těm, kteří mají zjevnou a silnou potřebu naší služby.
+       - icebreaker: NEPIŠ PŘÍMÝ TEXT ZPRÁVY! Místo toho vytvoř seznam 2-3 zajímavých bodů (odrážek) pro obchodníka, které dodají "human touch". Jdi do hloubky: zmiň jejich konkrétní úspěchy, zajímavé klienty, unikátní vlastnosti jejich produktu/služby, nebo specifika jejich lokality. Najdi něco, co je pro ně naprosto unikátní. TENTO TIP VYTVOŘ POUZE POKUD JE RATING VĚTŠÍ NEŽ 6! Pokud je rating 6 nebo menší, vrať null.
        - location: Zjisti fyzické sídlo firmy nebo lokaci působení (Město, Stát). Vrať jako jeden string (např. "Praha, Česká republika" nebo "Berlín, Německo"). Pokud nenajdeš, vrať null.
 
     VÝSTUP JSON:
@@ -168,7 +168,7 @@ export const processContact = async (
       "contactType": ${searchEmails ? '"person" | "generic" | "none"' : '"none"'},
       "language": "cs",
       "overview": "Detailní přehled (co dělají, sídlo, zkušenosti) nebo null",
-      "icebreaker": "Personalizovaný lidský tip na icebreaker nebo null",
+      "icebreaker": "Odrážky s unikátními body pro human touch nebo null",
       "rating": 8,
       "location": "Město, Stát nebo null"
     }

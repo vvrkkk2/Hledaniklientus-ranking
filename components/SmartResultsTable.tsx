@@ -338,9 +338,11 @@ const SmartResultsTable: React.FC<SmartResultsTableProps> = ({ totalCount, compl
                                     )}
 
                                     {r.enrichedData?.icebreaker && (
-                                        <div className="mt-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
-                                            <p className="text-xs font-semibold text-indigo-600 uppercase mb-1">Tip na Icebreaker</p>
-                                            <p className="text-slate-700 italic">"{r.enrichedData.icebreaker}"</p>
+                                        <div className="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                                            <p className="text-xs font-semibold text-indigo-600 uppercase mb-2">Tip na Icebreaker (Human Touch)</p>
+                                            <div className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                                                {r.enrichedData.icebreaker}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
