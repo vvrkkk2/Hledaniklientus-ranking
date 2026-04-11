@@ -74,7 +74,7 @@ const SmartResultsTable: React.FC<SmartResultsTableProps> = ({ totalCount, compl
             "AI_Osloveni",
             "AI_Jmeno", "AI_Prijmeni", "AI_Osoba_Cele", 
             "AI_Role", "AI_Email", "AI_ICO", "AI_Kontext",
-            "AI_Prehled", "AI_Icebreaker", "AI_Hodnoceni"
+            "AI_Prehled", "AI_Icebreaker", "AI_Hodnoceni", "AI_Lokalita_Stat"
         ];
 
         const fullHeader = ["URL", ...sortedOriginalKeys, ...aiColumns];
@@ -108,7 +108,8 @@ const SmartResultsTable: React.FC<SmartResultsTableProps> = ({ totalCount, compl
                 escape(r.enrichedData?.companyContext),
                 escape(r.enrichedData?.overview),
                 escape(r.enrichedData?.icebreaker),
-                escape(r.enrichedData?.rating)
+                escape(r.enrichedData?.rating),
+                escape(r.enrichedData?.location)
             ];
 
             return [escape(r.url), ...origVals, ...newVals].join(",");

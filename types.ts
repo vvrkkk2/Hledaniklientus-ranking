@@ -33,6 +33,7 @@ export interface EnrichedData {
   overview?: string;
   icebreaker?: string;
   rating?: number;
+  location?: string | null; // Sídlo / Stát
   
   groundingSources?: { uri: string; title?: string }[]; // Zdroje informací z Google Search
 }

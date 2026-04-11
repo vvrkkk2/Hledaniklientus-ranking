@@ -150,9 +150,10 @@ export const processContact = async (
     2. contactType nastav na "none".`}
 
     4. ANALÝZA LEADU (pokud je zadán profil ideálního klienta a popis služby):
-       - overview: Vytvoř stručný základní přehled o firmě/osobě (1-2 věty).
+       - overview: Vytvoř detailní přehled o firmě/osobě. Zahrň konkrétní informace: co přesně dělají, kde sídlí (lokalita), jaké mají zkušenosti/historii a jejich hlavní zaměření. Vyhni se obecným frázím, buď co nejvíce konkrétní (3-4 věty).
        - rating: Ohodnoť na škále 1-10, jak moc je to vhodný kandidát na oslovení (10 = perfektní shoda).
-       - icebreaker: Vytvoř velmi stručný, heslovitý tip na icebreaker (max 1-2 krátké body). TENTO TIP VYTVOŘ POUZE POKUD JE RATING VĚTŠÍ NEŽ 6! Pokud je rating 6 nebo menší, vrať null.
+       - icebreaker: Vytvoř vysoce personalizovaný tip na úvodní zprávu (icebreaker). Použij konkrétní detail z jejich webu nebo CSV (např. zmínka o jejich konkrétním produktu, lokalitě, nebo nedávném úspěchu) a přirozeně na to navaž naší službou. Musí to znít lidsky a autenticky, ne jako generický prodejní text. TENTO TIP VYTVOŘ POUZE POKUD JE RATING VĚTŠÍ NEŽ 6! Pokud je rating 6 nebo menší, vrať null.
+       - location: Zjisti fyzické sídlo firmy nebo lokaci působení (Město, Stát). Vrať jako jeden string (např. "Praha, Česká republika" nebo "Berlín, Německo"). Pokud nenajdeš, vrať null.
 
     VÝSTUP JSON:
     {
@@ -166,9 +167,10 @@ export const processContact = async (
       "ico": "IČO nebo null",
       "contactType": ${searchEmails ? '"person" | "generic" | "none"' : '"none"'},
       "language": "cs",
-      "overview": "Základní přehled o firmě nebo null",
-      "icebreaker": "Tip na icebreaker zprávu nebo null",
-      "rating": 8
+      "overview": "Detailní přehled (co dělají, sídlo, zkušenosti) nebo null",
+      "icebreaker": "Personalizovaný lidský tip na icebreaker nebo null",
+      "rating": 8,
+      "location": "Město, Stát nebo null"
     }
   `;
 
@@ -233,6 +235,7 @@ export const processContact = async (
         overview: data.overview,
         icebreaker: data.icebreaker,
         rating: data.rating,
+        location: data.location,
         groundingSources
       };
   } catch (parseError) {
@@ -251,6 +254,7 @@ export const processContact = async (
            overview: undefined,
            icebreaker: undefined,
            rating: undefined,
+           location: null,
            groundingSources: []
       };
   }
