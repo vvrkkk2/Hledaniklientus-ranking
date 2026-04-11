@@ -125,10 +125,10 @@ const InputSection: React.FC<InputSectionProps> = ({ onStart, isProcessing, sett
             <FileSpreadsheet className="w-12 h-12 text-blue-500" />
             <div className="text-center">
                 <p className="font-semibold">{csvFile.name}</p>
-                <p className="text-sm opacity-80">
+                <p className="text-sm opacity-80 mt-1">
                   Načteno {csvFile.items.length} řádků. 
                   <br/>
-                  Aplikace zachová strukturu CSV a doplní emaily.
+                  <span className="font-medium text-blue-700">AI nyní analyzuje VŠECHNY sloupce z vašeho CSV</span> a propojuje je s daty z webu.
                 </p>
             </div>
             <button 

@@ -104,19 +104,23 @@ export const processContact = async (
   const contextData = originalRow ? JSON.stringify(originalRow) : "";
 
   const combinedPrompt = `
-    ÚKOL: ${searchEmails ? 'Najdi kontaktní údaje a analyzuj' : 'Analyzuj'} firmu PROCHÁZENÍM WEBU: ${url}
+    ÚKOL: ${searchEmails ? 'Najdi kontaktní údaje a analyzuj' : 'Analyzuj'} firmu.
     
-    Data z CSV pro kontext: ${contextData}
+    Máš k dispozici DVA hlavní zdroje informací:
+    1. Webová stránka: ${url}
+    2. Data z CSV tabulky (ZDE JSOU DALŠÍ DŮLEŽITÁ DATA OD UŽIVATELE!): ${contextData}
+    
     Segment: ${segment.name}
     ${idealClientProfile ? `Požadavek na ideálního klienta: ${idealClientProfile}` : ''}
     ${serviceDescription ? `Popis naší služby: ${serviceDescription}` : ''}
 
-    INSTRUKCE PRO HLEDÁNÍ:
-    1. Použij Google Search Grounding k prozkoumání webové stránky ${url}.
-    2. Získej informace o firmě, co dělá a jak funguje.
-    ${searchEmails ? `3. Hledej sekce "Kontakty", "O nás", "Tým", "Vedení společnosti".
-    4. Hledej JMENOVITÉ emaily (např. jmeno.prijmeni@firma.cz). Toto je priorita.
-    5. Pokud nenajdeš osobu, hledej obecný email (info@, kontakt@).` : `3. NEHLEDEJ konkrétní kontakty ani e-maily, soustřeď se pouze na analýzu firmy.`}
+    INSTRUKCE PRO ANALÝZU A HLEDÁNÍ:
+    1. NEJDŘÍVE SI PROSTUDUJ DATA Z CSV! Obsahují důležitý kontext (např. poznámky, jména, obrat, historii), který musíš aktivně využít při hodnocení a tvorbě icebreakeru.
+    2. Použij Google Search Grounding k prozkoumání webové stránky ${url} a doplň chybějící informace.
+    3. Propoj informace z webu s daty z CSV. Pokud CSV obsahuje specifické detaily, odkaž na ně v icebreakeru nebo je zohledni v hodnocení.
+    ${searchEmails ? `4. Hledej sekce "Kontakty", "O nás", "Tým", "Vedení společnosti".
+    5. Hledej JMENOVITÉ emaily (např. jmeno.prijmeni@firma.cz). Toto je priorita.
+    6. Pokud nenajdeš osobu, hledej obecný email (info@, kontakt@).` : `4. NEHLEDEJ konkrétní kontakty ani e-maily, soustřeď se pouze na celkovou analýzu.`}
 
     INSTRUKCE PRO ZPRACOVÁNÍ DAT:
     ${searchEmails ? `1. Pokud najdeš osobu, ROZDĚL jméno na:
