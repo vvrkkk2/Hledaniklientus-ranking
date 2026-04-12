@@ -1,6 +1,5 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import { VertexAI } from '@google-cloud/vertexai';
 import path from "path";
 import { fileURLToPath } from 'url';
 
@@ -13,35 +12,46 @@ async function startServer() {
 
   app.use(express.json({ limit: '50mb' }));
 
-  // Initialize Vertex AI
-  const vertexAI = new VertexAI({
-    project: 'project-553f892f-9f62-4fe4-b22',
-    location: 'us-central1'
-  });
-
   app.post("/api/generate", async (req, res) => {
     try {
       const { prompt, model: modelName, responseMimeType, useSearch } = req.body;
       
-      const tools = useSearch ? [{ googleSearchRetrieval: {} }] : undefined;
+      const projectId = 'project-553f892f-9f62-4fe4-b22';
+      const location = 'us-central1';
+      const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+      
+      if (!apiKey) {
+          return res.status(500).json({ error: "API Key is missing in environment variables." });
+      }
 
-      const generativeModel = vertexAI.getGenerativeModel({
-        model: modelName || 'gemini-1.5-flash',
+      const model = modelName || 'gemini-1.5-flash';
+      const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${model}:generateContent?key=${apiKey}`;
+
+      const requestBody: any = {
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {
             responseMimeType: responseMimeType || 'text/plain'
-        },
-        tools: tools as any
-      });
-
-      const request = {
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        }
       };
 
-      const response = await generativeModel.generateContent(request);
-      const text = response.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      
-      // Extract grounding metadata if available
-      const groundingMetadata = response.response.candidates?.[0]?.groundingMetadata;
+      if (useSearch) {
+          requestBody.tools = [{ googleSearchRetrieval: {} }];
+      }
+
+      const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+          throw new Error(data.error?.message || JSON.stringify(data));
+      }
+
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const groundingMetadata = data.candidates?.[0]?.groundingMetadata;
       
       res.json({ text, groundingMetadata });
     } catch (error: any) {
