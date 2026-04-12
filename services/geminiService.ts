@@ -1,21 +1,8 @@
-import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { EnrichedData, Segment, ContactType } from "../types";
 
 // Modely
-// Gemini 2.0 Flash je momentálně nejrobustnější "workhorse" model.
-const PRIMARY_MODEL = "gemini-2.0-flash";
-// Jako fallback použijeme Lite verzi, pokud je hlavní přetížená.
-const FALLBACK_MODEL = "gemini-2.0-flash-lite-preview-02-05"; 
-
-// Helper to initialize client ONLY when needed.
-const getAiClient = () => {
-  const key = process.env.API_KEY;
-  if (!key) {
-    console.error("API Key is missing!");
-    throw new Error("API Key is missing. Please check your Vercel Environment Variables.");
-  }
-  return new GoogleGenAI({ apiKey: key });
-};
+const PRIMARY_MODEL = "gemini-1.5-flash";
+const FALLBACK_MODEL = "gemini-1.5-flash"; 
 
 const cleanJson = (text: string): string => {
     if (!text) return "{}";
@@ -67,6 +54,19 @@ const retryWithBackoff = async <T>(
   }
 };
 
+const callApi = async (prompt: string, model: string, responseMimeType: string = 'text/plain', useSearch: boolean = false) => {
+    const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, model, responseMimeType, useSearch })
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || `HTTP error! status: ${res.status}`);
+    }
+    return await res.json();
+};
+
 /**
  * 1. FÁZE: SEGMENTACE
  */
@@ -82,12 +82,7 @@ export const analyzeSegments = async (rows: Record<string, string>[]): Promise<S
   `;
 
   try {
-    const ai = getAiClient();
-    const response = await retryWithBackoff<GenerateContentResponse>(() => ai.models.generateContent({
-          model: PRIMARY_MODEL,
-          contents: prompt,
-          config: { responseMimeType: "application/json" }
-    }), 2, 2000);
+    const response = await retryWithBackoff(() => callApi(prompt, PRIMARY_MODEL, 'application/json'), 2, 2000);
     return JSON.parse(cleanJson(response.text || "[]"));
   } catch (e) {
     console.error("Segment analysis failed:", e);
@@ -174,19 +169,11 @@ export const processContact = async (
     }
   `;
 
-  const ai = getAiClient();
-
   const callModel = async (modelName: string) => {
-      return ai.models.generateContent({
-        model: modelName,
-        contents: combinedPrompt,
-        config: {
-          tools: [{ googleSearch: {} }],
-        }
-      });
+      return callApi(combinedPrompt, modelName, 'application/json', true);
   };
 
-  let response: GenerateContentResponse;
+  let response: any;
   
   try {
       // Primary attempt
@@ -204,9 +191,9 @@ export const processContact = async (
 
   // Process Response
   try {
-      const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      const groundingChunks = response.groundingMetadata?.groundingChunks || [];
       const groundingSources = groundingChunks
-        .map(chunk => chunk.web ? { uri: chunk.web.uri, title: chunk.web.title } : null)
+        .map((chunk: any) => chunk.web ? { uri: chunk.web.uri, title: chunk.web.title } : null)
         .filter(Boolean) as { uri: string; title?: string }[];
 
       const rawText = response.text || "{}";
