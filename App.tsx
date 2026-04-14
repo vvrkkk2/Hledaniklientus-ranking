@@ -218,8 +218,8 @@ const App: React.FC = () => {
       processingRef.current = true;
       
       // ADAPTIVE THROTTLING VARIABLES
-      let currentDelay = 3000; 
-      const MAX_DELAY = 15000;
+      let currentDelay = 1000; // Sníženo z 3000 na 1000
+      const MAX_DELAY = 5000;  // Sníženo z 15000 na 5000
       
       const refreshStats = async () => {
           const s = await getStats();
@@ -279,8 +279,8 @@ const App: React.FC = () => {
                 await upsertResult(completedResult);
                 
                 // Success reduces delay slowly
-                if (currentDelay > 4000) {
-                    currentDelay = Math.max(3000, currentDelay - 500); 
+                if (currentDelay > 1000) {
+                    currentDelay = Math.max(1000, currentDelay - 500); 
                 }
 
             } catch (err: any) {

@@ -35,7 +35,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const retryWithBackoff = async <T>(
   operation: () => Promise<T>, 
   retries = 3, 
-  baseDelay = 5000 
+  baseDelay = 2000 
 ): Promise<T> => {
   try {
     return await operation();
@@ -181,8 +181,8 @@ export const processContact = async (
   } catch (err) {
       console.warn(`Primary model (${PRIMARY_MODEL}) failed, switching to fallback (${FALLBACK_MODEL}).`);
       try {
-        await sleep(3000); // Krátká pauza před přepnutím modelu
-        response = await retryWithBackoff(() => callModel(FALLBACK_MODEL), 3, 10000);
+        await sleep(1000); // Krátká pauza před přepnutím modelu
+        response = await retryWithBackoff(() => callModel(FALLBACK_MODEL), 3, 3000);
       } catch (fallbackErr: any) {
         // Propagate specific overload errors so App.tsx can handle global pause
         throw fallbackErr;
