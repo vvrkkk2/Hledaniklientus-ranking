@@ -218,8 +218,8 @@ const App: React.FC = () => {
       processingRef.current = true;
       
       // ADAPTIVE THROTTLING VARIABLES
-      let currentDelay = 1000; // Sníženo z 3000 na 1000
-      const MAX_DELAY = 5000;  // Sníženo z 15000 na 5000
+      let currentDelay = 4000; // Zvýšeno na 4000ms (15 RPM limit)
+      const MAX_DELAY = 10000;  // Zvýšeno na 10000ms
       
       const refreshStats = async () => {
           const s = await getStats();
@@ -279,8 +279,8 @@ const App: React.FC = () => {
                 await upsertResult(completedResult);
                 
                 // Success reduces delay slowly
-                if (currentDelay > 1000) {
-                    currentDelay = Math.max(1000, currentDelay - 500); 
+                if (currentDelay > 4000) {
+                    currentDelay = Math.max(4000, currentDelay - 500); 
                 }
 
             } catch (err: any) {
@@ -289,7 +289,7 @@ const App: React.FC = () => {
                 // CRITICAL ERROR (503/429) -> PAUSE EVERYONE
                 if (errorMessage.includes('503') || errorMessage.includes('429') || errorMessage.includes('overloaded') || errorMessage.includes('resource exhausted')) {
                     setIsCoolingDown(true);
-                    await new Promise(resolve => setTimeout(resolve, 60000)); // 60s hard penalty
+                    await new Promise(resolve => setTimeout(resolve, 15000)); // 15s hard penalty
                     setIsCoolingDown(false);
                     currentDelay = Math.min(MAX_DELAY, currentDelay + 3000);
                     
@@ -477,12 +477,12 @@ const App: React.FC = () => {
                             </div>
                         </div>
                     ) : 
-                    /* STATUS: API OVERLOAD (503) */
+                    /* STATUS: API OVERLOAD (503/429) */
                     isCoolingDown ? (
                          <div className="flex items-center gap-3 text-red-700 w-full animate-pulse">
                             <ZapOff className="w-6 h-6" />
                             <div>
-                                <span className="font-bold">API přetíženo - Vynucená pauza 60s</span>
+                                <span className="font-bold">API limit (429) - Pauza 15s</span>
                                 <p className="text-xs mt-0.5">Čekám na obnovení limitů Google Gemini...</p>
                             </div>
                          </div>
