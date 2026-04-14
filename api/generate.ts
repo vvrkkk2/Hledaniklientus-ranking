@@ -20,12 +20,15 @@ export default async function handler(req: any, res: any) {
     const model = modelName || 'gemini-2.5-flash';
 
     const tools = useSearch ? [{ googleSearch: {} }] : undefined;
+    
+    // Gemini API nepodporuje responseMimeType: 'application/json' pokud jsou aktivní tools (např. googleSearch)
+    const finalMimeType = useSearch ? 'text/plain' : (responseMimeType || 'text/plain');
 
     const response = await ai.models.generateContent({
       model: model,
       contents: prompt,
       config: {
-        responseMimeType: responseMimeType || 'text/plain',
+        responseMimeType: finalMimeType,
         tools: tools as any
       }
     });
