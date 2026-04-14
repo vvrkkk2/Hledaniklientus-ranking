@@ -1,3 +1,5 @@
+import { GoogleGenAI } from '@google/genai';
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -14,38 +16,26 @@ export default async function handler(req: any, res: any) {
         return res.status(500).json({ error: "API Key is missing in environment variables." });
     }
 
-    const model = modelName || 'gemini-1.5-flash';
-    const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${model}:generateContent?key=${apiKey}`;
+    const ai = new GoogleGenAI({ apiKey });
+    const model = modelName || 'gemini-2.5-flash';
 
-    const requestBody: any = {
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-          responseMimeType: responseMimeType || 'text/plain'
+    const tools = useSearch ? [{ googleSearch: {} }] : undefined;
+
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+      config: {
+        responseMimeType: responseMimeType || 'text/plain',
+        tools: tools as any
       }
-    };
-
-    if (useSearch) {
-        requestBody.tools = [{ googleSearchRetrieval: {} }];
-    }
-
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.error?.message || JSON.stringify(data));
-    }
-
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    const groundingMetadata = data.candidates?.[0]?.groundingMetadata;
+    const text = response.text || "";
+    const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
     
     res.status(200).json({ text, groundingMetadata });
   } catch (error: any) {
-    console.error("Vertex AI Error:", error);
+    console.error("Gemini API Error:", error);
     res.status(500).json({ error: error.message || String(error) });
   }
 }

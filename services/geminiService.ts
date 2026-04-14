@@ -1,8 +1,8 @@
 import { EnrichedData, Segment, ContactType } from "../types";
 
 // Modely
-const PRIMARY_MODEL = "gemini-1.5-flash";
-const FALLBACK_MODEL = "gemini-1.5-flash"; 
+const PRIMARY_MODEL = "gemini-2.5-flash";
+const FALLBACK_MODEL = "gemini-2.5-flash"; 
 
 const cleanJson = (text: string): string => {
     if (!text) return "{}";
